@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>test</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <script type="text/javascript">
+
+        function printStr(tagName, str, maxLen) {
+            const elem = document.getElementById(tagName);
+            let sb = "";
+            for(let i=0; i<maxLen; i++) {
+                const c = str.charAt(i) || "&nbsp;";
+                sb = sb+`<td class='normal'>${c}</td>`;
+            }
+            elem.innerHTML = sb;
+        }
+
+        function keypressed(e) {
+        }
+            
+        function clickme() {
+            const pic = document.getElementById("pic").value;
+            console.log(pic);
+            const colors = [];
+            pic.split("\n").forEach(s => s.length>0 && colors.push(s));
+            const w = colors[0].length;
+            const h = colors.length;
+            const strColors = colors.join("");
+            showPic(strColors, h, w);
+            largestArea(strColors, h, w);
+        }
+
+        function showPic(colors, h, w, visited={}) {
+            const colorMap = {"R": "redCell", "G": "greenCell", "B": "blueCell"};
+            //console.log("showPic visited=");
+            //console.dir(visited);
+            const elem = document.getElementById("tb");
+            let sb = "";
+            let x = -1;
+            for(let i=0; i<colors.length; i++) {
+                x++;
+                if(x===0) {
+                    sb = sb+"<tr>";
+                }
+                const c = colors.charAt(i);
+                const cls = colorMap[c];
+                const sym = (visited[i] === undefined) ? "&nbsp;" : visited[i];
+                sb = sb+`<td class="${cls}">${sym}</td>`;
+                if(x===w-1) {
+                    sb = sb+"</tr>";
+                    x = -1;
+                }                
+            }
+            elem.innerHTML = sb;
+        }
+
+        let globalVisited = [];
+
+        function largestArea(colors, h, w) {
+            globalVisited = [];
+            const visited = {};
+            let max = 0;
+            let pathNo = 1;
+            for(let i=0; i<colors.length; i++) {
+                const c = colors[i];
+                const pathLen = findArea(c, colors, i, h, w, visited, 0, pathNo, 0);
+                if(pathLen>0) {
+                    pathNo++;
+                    if(max<pathLen) {
+                        max=pathLen;
+                    }
+                }                
+            }
+            console.log("max path len = "+max);
+            setTimeout(() => showSteps(colors, h, w, 0), 1000);
+        }
+
+        function showSteps(colors, h, w, n) {
+            if(n>=globalVisited.length) {
+                return;
+            }
+            showPic(colors, h, w, globalVisited[n]);
+            setTimeout( () => showSteps(colors, h, w, n+1), 1000);
+        }
+/*
+RRRGGBBR
+RBGGGBRR
+BGBBRRBG
+GBGBRBBR
+
+RRRRRRRR
+GGGGGGGR
+RRRRRRBR
+RBBBBBBR
+RGGGGGGR
+RRRRRRRR
+*/
+        function findArea(color, colors, i, h, w, visited, pathLen, pathNo, depth) {
+            //console.log("findArea " +i);
+            if(visited[i] !== undefined) {
+                return pathLen;
+            }
+            if(i>=colors.length || i<0) {
+                return pathLen;
+            }
+            if(colors[i] !== color) {                
+                return pathLen;
+            }
+            visited[i] = pathNo;
+            const tmp = {...visited};
+            globalVisited.push(tmp);
+            pathLen++;
+            console.log(i+" visited. pathNo="+pathNo+" pathLen="+pathLen);
+
+            if(i % w > 0) {
+                //console.log(i+"%"+w+"="+(i%w)+">0 -- recurse to "+(i-1));
+                pathLen = findArea(color, colors, i-1, h, w, visited, pathLen, pathNo, depth+1);
+            } else {
+//                console.log(i+"%"+w+"="+(i%w)+" === 0 -- DONT recurse to "+(i-1));
+            }
+            if(i % w <= w-2) {
+//                console.log(i+"%"+w+"="+(i%w)+" <= w-2 -- recurse to "+(i+1));
+                pathLen = findArea(color, colors, i+1, h, w, visited, pathLen, pathNo, depth+1);
+            } else {
+//                console.log(i+"%"+w+"="+(i%w)+" > w-2 -- DONT recurse to "+(i+1));
+            }
+            pathLen = findArea(color, colors, i-w, h, w, visited, pathLen, pathNo, depth+1);
+            pathLen = findArea(color, colors, i+w, h, w, visited, pathLen, pathNo, depth+1);
+            return pathLen;
+        }
+
+        </script>
+        <textarea name="pic" id="pic" cols="10" rows="10" class="pic"></textarea>
+        <hr />
+        <div id="root">
+            <table border="1" cellpadding="4">
+                <tbody id = "tb">
+                </tbody>
+            </table>
+        </div>
+        <hr />
+        <button onclick="clickme()">Click</button>
+
+        <script type="text/javascript">
+            document.getElementById("pic").addEventListener("keypress", keypressed);
+        </script>
+    </body>
+</html>
