@@ -11,19 +11,6 @@
     <body>
         <script type="text/javascript">
 
-        function printStr(tagName, str, maxLen) {
-            const elem = document.getElementById(tagName);
-            let sb = "";
-            for(let i=0; i<maxLen; i++) {
-                const c = str.charAt(i) || "&nbsp;";
-                sb = sb+`<td class='normal'>${c}</td>`;
-            }
-            elem.innerHTML = sb;
-        }
-
-        function keypressed(e) {
-        }
-            
         function clickme() {
             const pic = document.getElementById("pic").value;
             console.log(pic);
@@ -61,14 +48,13 @@
         }
 
 
-        function largestArea(colors, h, w) {
-            const globalVisited = [];
+        async function largestArea(colors, h, w) {
             const visited = {};
             let max = 0;
             let pathNo = 1;
             for(let i=0; i<colors.length; i++) {
                 const c = colors[i];
-                const pathLen = findArea(c, colors, i, h, w, visited, 0, pathNo, 0, globalVisited);
+                const pathLen = await findArea(c, colors, i, h, w, visited, 0, pathNo, 0);
                 if(pathLen>0) {
                     pathNo++;
                     if(max<pathLen) {
@@ -76,17 +62,16 @@
                     }
                 }                
             }
-            console.log("max path len = "+max+" globalVisited=");
-            console.dir(globalVisited);
-            setTimeout(() => showSteps(colors, h, w, 0, globalVisited), 1000);
+            console.log("max path len = "+max);
         }
 
-        function showSteps(colors, h, w, n, globalVisited) {
-            if(n>=globalVisited.length) {
-                return;
-            }
-            showPic(colors, h, w, globalVisited[n]);
-            setTimeout( () => showSteps(colors, h, w, n+1, globalVisited), 1000);
+        async function showSteps(colors, h, w, visited) {
+            await delay (() => showPic(colors, h, w, visited));
+        }
+
+        function delay(f) {
+            console.log("delay f="+f);
+            return new Promise( (resolve, reject) => { setTimeout( () => resolve(f()), 100) } );
         }
 /*
 RRRGGBBR
@@ -101,7 +86,7 @@ RBBBBBBR
 RGGGGGGR
 RRRRRRRR
 */
-        function findArea(color, colors, i, h, w, visited, pathLen, pathNo, depth, globalVisited) {
+        async function findArea(color, colors, i, h, w, visited, pathLen, pathNo) {
             //console.log("findArea " +i);
             if(visited[i] !== undefined) {
                 return pathLen;
@@ -113,25 +98,25 @@ RRRRRRRR
                 return pathLen;
             }
             visited[i] = pathNo;
-            const tmp = {...visited};
-            globalVisited.push(tmp);
             pathLen++;
             console.log(i+" visited. pathNo="+pathNo+" pathLen="+pathLen);
+            const tmp = {...visited};
+            await showSteps(colors, h, w, tmp);
 
             if(i % w > 0) {
                 //console.log(i+"%"+w+"="+(i%w)+">0 -- recurse to "+(i-1));
-                pathLen = findArea(color, colors, i-1, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
+                pathLen = await findArea(color, colors, i-1, h, w, visited, pathLen, pathNo);
             } else {
 //                console.log(i+"%"+w+"="+(i%w)+" === 0 -- DONT recurse to "+(i-1));
             }
             if(i % w <= w-2) {
 //                console.log(i+"%"+w+"="+(i%w)+" <= w-2 -- recurse to "+(i+1));
-                pathLen = findArea(color, colors, i+1, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
+                pathLen = await findArea(color, colors, i+1, h, w, visited, pathLen, pathNo);
             } else {
 //                console.log(i+"%"+w+"="+(i%w)+" > w-2 -- DONT recurse to "+(i+1));
             }
-            pathLen = findArea(color, colors, i-w, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
-            pathLen = findArea(color, colors, i+w, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
+            pathLen = await findArea(color, colors, i-w, h, w, visited, pathLen, pathNo);
+            pathLen = await findArea(color, colors, i+w, h, w, visited, pathLen, pathNo);
             return pathLen;
         }
 
@@ -152,8 +137,5 @@ RRRRRRRR</textarea>
         <hr />
         <button onclick="clickme()">Click</button>
 
-        <script type="text/javascript">
-            document.getElementById("pic").addEventListener("keypress", keypressed);
-        </script>
     </body>
 </html>
