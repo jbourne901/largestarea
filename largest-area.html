@@ -60,16 +60,15 @@
             elem.innerHTML = sb;
         }
 
-        let globalVisited = [];
 
         function largestArea(colors, h, w) {
-            globalVisited = [];
+            const globalVisited = [];
             const visited = {};
             let max = 0;
             let pathNo = 1;
             for(let i=0; i<colors.length; i++) {
                 const c = colors[i];
-                const pathLen = findArea(c, colors, i, h, w, visited, 0, pathNo, 0);
+                const pathLen = findArea(c, colors, i, h, w, visited, 0, pathNo, 0, globalVisited);
                 if(pathLen>0) {
                     pathNo++;
                     if(max<pathLen) {
@@ -77,16 +76,17 @@
                     }
                 }                
             }
-            console.log("max path len = "+max);
-            setTimeout(() => showSteps(colors, h, w, 0), 1000);
+            console.log("max path len = "+max+" globalVisited=");
+            console.dir(globalVisited);
+            setTimeout(() => showSteps(colors, h, w, 0, globalVisited), 1000);
         }
 
-        function showSteps(colors, h, w, n) {
+        function showSteps(colors, h, w, n, globalVisited) {
             if(n>=globalVisited.length) {
                 return;
             }
             showPic(colors, h, w, globalVisited[n]);
-            setTimeout( () => showSteps(colors, h, w, n+1), 1000);
+            setTimeout( () => showSteps(colors, h, w, n+1, globalVisited), 1000);
         }
 /*
 RRRGGBBR
@@ -101,7 +101,7 @@ RBBBBBBR
 RGGGGGGR
 RRRRRRRR
 */
-        function findArea(color, colors, i, h, w, visited, pathLen, pathNo, depth) {
+        function findArea(color, colors, i, h, w, visited, pathLen, pathNo, depth, globalVisited) {
             //console.log("findArea " +i);
             if(visited[i] !== undefined) {
                 return pathLen;
@@ -120,23 +120,28 @@ RRRRRRRR
 
             if(i % w > 0) {
                 //console.log(i+"%"+w+"="+(i%w)+">0 -- recurse to "+(i-1));
-                pathLen = findArea(color, colors, i-1, h, w, visited, pathLen, pathNo, depth+1);
+                pathLen = findArea(color, colors, i-1, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
             } else {
 //                console.log(i+"%"+w+"="+(i%w)+" === 0 -- DONT recurse to "+(i-1));
             }
             if(i % w <= w-2) {
 //                console.log(i+"%"+w+"="+(i%w)+" <= w-2 -- recurse to "+(i+1));
-                pathLen = findArea(color, colors, i+1, h, w, visited, pathLen, pathNo, depth+1);
+                pathLen = findArea(color, colors, i+1, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
             } else {
 //                console.log(i+"%"+w+"="+(i%w)+" > w-2 -- DONT recurse to "+(i+1));
             }
-            pathLen = findArea(color, colors, i-w, h, w, visited, pathLen, pathNo, depth+1);
-            pathLen = findArea(color, colors, i+w, h, w, visited, pathLen, pathNo, depth+1);
+            pathLen = findArea(color, colors, i-w, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
+            pathLen = findArea(color, colors, i+w, h, w, visited, pathLen, pathNo, depth+1, globalVisited);
             return pathLen;
         }
 
         </script>
-        <textarea name="pic" id="pic" cols="10" rows="10" class="pic"></textarea>
+        <textarea name="pic" id="pic" cols="10" rows="10" class="pic">RRRRRRRR
+GGGGGGGR
+RRRRRRBR
+RBBBBBBR
+RGGGGGGR
+RRRRRRRR</textarea>
         <hr />
         <div id="root">
             <table border="1" cellpadding="4">
